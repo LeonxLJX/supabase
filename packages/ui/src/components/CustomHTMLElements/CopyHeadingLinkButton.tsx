@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckIcon, LinkIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { copyToClipboard } from '../../lib/utils/clipboard'
 import { cn } from '../../lib/utils/cn'
@@ -16,13 +16,15 @@ export interface CopyHeadingLinkButtonProps {
 
 export const CopyHeadingLinkButton = ({ id, className }: CopyHeadingLinkButtonProps) => {
   const [isCopied, setIsCopied] = useState(false)
+  const copiedTimeout = useRef<number | undefined>(undefined)
 
   const handleClick = () => {
     // the url keeps its query string, so a shared link opens the same filtered view
     const url = `${window.location.href.split('#')[0]}#${id}`
     copyToClipboard(url, () => {
       setIsCopied(true)
-      window.setTimeout(() => setIsCopied(false), 2000)
+      window.clearTimeout(copiedTimeout.current)
+      copiedTimeout.current = window.setTimeout(() => setIsCopied(false), 2000)
     })
   }
 
@@ -34,6 +36,7 @@ export const CopyHeadingLinkButton = ({ id, className }: CopyHeadingLinkButtonPr
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
+            asChild
             variant="text"
             icon={
               <CrossfadeIcon active={isCopied} activeIcon={CheckIcon} inactiveIcon={LinkIcon} />
@@ -47,7 +50,9 @@ export const CopyHeadingLinkButton = ({ id, className }: CopyHeadingLinkButtonPr
               '[:hover>&]:opacity-100 focus-visible:opacity-100',
               className
             )}
-          />
+          >
+            <a href={`#${id}`} />
+          </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">Copy link to section</TooltipContent>
       </Tooltip>
